@@ -10,6 +10,9 @@ file = _path.dust.."code/softcut-studies/lib/whirl1.aif"
 
 feed = 1.0
 preserve = 0.25
+mix = 0
+level_1 = 1
+level_2 = 1
 
 positions = {0,0}
 
@@ -30,7 +33,7 @@ function init()
   softcut.buffer_read_mono(file,0,1,-1,1,1)
 
 	audio.level_adc_cut(1)
-	audio.level_adc_cut(2)
+	-- audio.level_adc_cut(2)
   softcut.level_input_cut(1,2,1)
   softcut.level_cut_cut(1,2,1)
 
@@ -47,7 +50,7 @@ function init()
  
   -- record head
   softcut.enable(2,1)
-  softcut.buffer(2,1)
+  softcut.buffer(2,2)  -- record on buffer 2
   softcut.rate(2,1)
   softcut.loop(2,1)
   softcut.loop_start(2,1)
@@ -57,7 +60,7 @@ function init()
   softcut.rec(2,1)
   softcut.rec_level(2,0.75)
   softcut.pre_level(2,0.25)
-  softcut.level(2,0)
+  softcut.level(2,1)
   softcut.fade_time(2,0.02)
 
   softcut.phase_quant(1,0.025)
@@ -69,12 +72,20 @@ function init()
 end
 
 function enc(n,d)
-  if n==2 then
+  if n==1 then
     feed = util.clamp(feed+d/20,0,1)
     softcut.level_cut_cut(1,2,feed)
-  elseif n==3 then
+  elseif n==2 then
     preserve = util.clamp(preserve+d/100,0,0.25)
     softcut.pre_level(2,preserve)
+  else
+    -- mix between buffers
+    mix = util.clamp(mix + d/10, -1, 1)
+    level_1 = mix > 0 and 1 - mix or 1
+    level_2 = mix < 0 and 1 + mix or 1
+
+    softcut.level(1, level_1)
+    softcut.level(2, level_2)
   end
   redraw()
 end
@@ -103,6 +114,12 @@ function redraw()
   screen.text("preserve: ")
   screen.move(118,50)
   screen.text_right(string.format("%.2f",preserve))
+  screen.move(10,60)
+  screen.text("mix: ")
+  screen.move(118,60)
+  screen.text_right(
+    string.format("%.2f", level_1) .. " | " ..
+    string.format("%.2f", level_2))
   screen.update()
 end
 
