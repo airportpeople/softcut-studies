@@ -21,8 +21,8 @@ function load_file(file)
   softcut.buffer_clear_region(1,-1)
   selecting = false
   if file ~= "cancel" then
-    local ch, samples = audio.file_info(file)
-    length = samples/48000
+    local ch, samples, sample_rate = audio.file_info(file)
+    length = samples/sample_rate
     softcut.buffer_read_mono(file,0,1,-1,1,1)
     softcut.buffer_read_mono(file,0,1,-1,1,2)
     reset()
